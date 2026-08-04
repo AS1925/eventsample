@@ -31,63 +31,47 @@ ORDER BY registrations.id DESC
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" href="../events/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <title>View Registrations</title>
 </head>
 <body>
-
-<h2>Event Registrations</h2>
-
-<table border="1" cellpadding="10">
-
-<tr>
-    <th>S.No</th>
-    <th>User Name</th>
-    <th>Email</th>
-    <th>Event Name</th>
-    <th>Event Date</th>
-    <th>Status</th>
-</tr>
-
-<?php
-
-$count = 1;
-
-while($row = mysqli_fetch_assoc($query))
-{
-?>
-
-<tr>
-
-<td><?php echo $count++; ?></td>
-
-<td><?php echo $row['name']; ?></td>
-
-<td><?php echo $row['email']; ?></td>
-
-<td><?php echo $row['event_name']; ?></td>
-
-<td><?php echo $row['event_date']; ?></td>
-
-<td><?php echo $row['status']; ?></td>
-
-</tr>
-
-<?php
-}
-?>
-
-</table>
-
-<br><br>
-
-<a href="dashboard.php">Back Dashboard</a>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="script.js"></script>
+    <?php include '../includes/navbar.php'; ?>
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-lg-3">
+                <?php include '../includes/admin_sidebar.php'; ?>
+            </div>
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h3 class="fw-bold mb-3">Event Registrations</h3>
+                    <div class="table-responsive">
+                        <table class="table align-middle modern-table">
+                            <thead><tr><th>S.No</th><th>User Name</th><th>Email</th><th>Event</th><th>Date</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <?php $count=1; while($row=mysqli_fetch_assoc($query)){ ?>
+                                <tr>
+                                    <td><?php echo $count++; ?></td>
+                                    <td><?php echo htmlspecialchars($row['name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['event_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['event_date']); ?></td>
+                                    <td><span class="badge bg-soft-primary text-primary"><?php echo htmlspecialchars($row['status']); ?></span></td>
+                                </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

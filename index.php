@@ -42,104 +42,13 @@ FROM registrations
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventEase - Event Management & Service Booking</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="events/logo.png" type="image/png">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-nav">
-
-        <div class="container">
-
-            <a class="navbar-brand d-flex align-items-center" href="index.php">
-
-                <img src="events/logo.png" width="55" height="55" class="me-2">
-
-                <span class="logo-text">
-
-                    EventEase
-
-                </span>
-
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
-
-                <span class="navbar-toggler-icon"></span>
-
-            </button>
-
-            <div class="collapse navbar-collapse" id="menu">
-
-                <ul class="navbar-nav ms-auto align-items-center">
-
-                    <li class="nav-item">
-
-                        <a class="nav-link active" href="#">
-
-                            Home
-
-                        </a>
-
-                    </li>
-
-                    <li class="nav-item">
-
-                        <a class="nav-link" href="#about">
-
-                            About
-
-                        </a>
-
-                    </li>
-
-                    <li class="nav-item">
-
-                        <a class="nav-link" href="#services">
-
-                            Services
-
-                        </a>
-
-                    </li>
-
-                    <li class="nav-item">
-
-                        <a class="nav-link" href="#events">
-
-                            Events
-
-                        </a>
-
-                    </li>
-
-                    <li class="nav-item ms-3">
-
-                        <a href="login.php" class="btn btn-outline-light">
-
-                            Login
-
-                        </a>
-
-                    </li>
-
-                    <li class="nav-item ms-2">
-
-                        <a href="register.php" class="btn btn-warning">
-
-                            Register
-
-                        </a>
-
-                    </li>
-
-                </ul>
-
-            </div>
-
-        </div>
-
-    </nav>
+    <?php include 'includes/navbar.php'; ?>
     <section class="hero">
 
         <div class="container">
@@ -1237,4 +1146,5 @@ Request a Service
 </div>
 
 </section>
+<?php include 'includes/footer.php'; ?>
 </body>

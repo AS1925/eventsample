@@ -156,7 +156,6 @@ Choose new imagev(option)<br>
 <br><br>
 
 <a href="view_events.php">Back</a>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="script.js"></script>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

@@ -28,70 +28,50 @@ ORDER BY service_requests.id DESC
 ");
 ?>
 
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-<title>Service Requests</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" href="../events/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>Service Requests</title>
 </head>
 <body>
-
-<h2>Service Requests</h2>
-
-<table border="1" cellpadding="10">
-
-<tr>
-<th>S.No</th>
-<th>User</th>
-<th>Event Type</th>
-<th>Date</th>
-<th>Venue</th>
-<th>Guests</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-
-<?php
-
-$count=1;
-
-while($row=mysqli_fetch_assoc($query))
-{
-?>
-
-<tr>
-
-<td><?php echo $count++; ?></td>
-
-<td><?php echo $row['name']; ?></td>
-
-<td><?php echo $row['event_type']; ?></td>
-
-<td><?php echo $row['event_date']; ?></td>
-
-<td><?php echo $row['venue']; ?></td>
-
-<td><?php echo $row['guests']; ?></td>
-
-<td><?php echo $row['status']; ?></td>
-
-<td>
-<a href="update_request_status.php?id=<?php echo $row['id']; ?>">
-Update Status
-</a>
-</td>
-
-</tr>
-
-<?php
-}
-?>
-
-</table>
-<a href="dashboard.php">Back Dashboard</a>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="script.js"></script>
+    <?php include '../includes/navbar.php'; ?>
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-lg-3">
+                <?php include '../includes/admin_sidebar.php'; ?>
+            </div>
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h3 class="fw-bold mb-3">Service Requests</h3>
+                    <div class="table-responsive">
+                        <table class="table align-middle modern-table">
+                            <thead><tr><th>S.No</th><th>User</th><th>Event Type</th><th>Date</th><th>Venue</th><th>Guests</th><th>Status</th><th>Action</th></tr></thead>
+                            <tbody>
+                                <?php $count=1; while($row=mysqli_fetch_assoc($query)){ ?>
+                                <tr>
+                                    <td><?php echo $count++; ?></td>
+                                    <td><?php echo htmlspecialchars($row['name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['event_type']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['event_date']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['venue']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['guests']); ?></td>
+                                    <td><span class="badge bg-soft-primary text-primary"><?php echo htmlspecialchars($row['status']); ?></span></td>
+                                    <td><a href="update_request_status.php?id=<?php echo $row['id']; ?>" class="btn btn-outline-primary btn-sm">Update Status</a></td>
+                                </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

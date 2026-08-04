@@ -63,93 +63,79 @@ if(isset($_POST['submit']))
 }
 ?>
 
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-<title>Service Request</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" href="../events/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>Service Request</title>
 </head>
 <body>
-
-<h2>Event Service Request</h2>
-
-<form method="POST">
-
-Event Type <br>
-<select name="event_type" required>
-    <option>Wedding</option>
-    <option>Birthday</option>
-    <option>Reception</option>
-    <option>Corporate</option>
-</select>
-
-<br><br>
-
-Event Date <br>
-<input type="date" name="event_date" required>
-
-<br><br>
-
-Venue <br>
-<input type="text" name="venue" required>
-
-<br><br>
-
-Number of Guests <br>
-<input type="number" name="guests" min="1" required>
-
-<br><br>
-
-Decoration <br>
-<select name="decoration">
-    <option>Yes</option>
-    <option>No</option>
-</select>
-
-<br><br>
-
-Photography <br>
-<select name="photography">
-    <option>Yes</option>
-    <option>No</option>
-</select>
-
-<br><br>
-
-Catering <br>
-<select name="catering">
-    <option>Yes</option>
-    <option>No</option>
-</select>
-
-<br><br>
-
-DJ <br>
-<select name="dj">
-    <option>Yes</option>
-    <option>No</option>
-</select>
-
-<br><br>
-
-Additional Requirements <br>
-
-<textarea
-name="additional_requirements">
-</textarea>
-
-<br><br>
-
-<input type="submit" name="submit" value="Submit Request">
-
-</form>
-
-<br>
-
-<?php echo $msg; ?>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="script.js"></script>
+    <?php include '../includes/navbar.php'; ?>
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-lg-3">
+                <?php include '../includes/user_sidebar.php'; ?>
+            </div>
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm rounded-4 p-4 p-lg-5">
+                    <div class="text-center text-md-start mb-4">
+                        <h3 class="fw-bold mb-2">Event Service Request</h3>
+                        <p class="text-muted mb-0">Tell us about your vision and we’ll help you plan it beautifully.</p>
+                    </div>
+                    <form method="POST" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Event Type</label>
+                            <select name="event_type" class="form-select" required>
+                                <option>Wedding</option>
+                                <option>Birthday</option>
+                                <option>Reception</option>
+                                <option>Corporate</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Event Date</label>
+                            <input type="date" name="event_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Venue</label>
+                            <input type="text" name="venue" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Number of Guests</label>
+                            <input type="number" name="guests" min="1" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Decoration</label>
+                            <select name="decoration" class="form-select"><option>Yes</option><option>No</option></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Photography</label>
+                            <select name="photography" class="form-select"><option>Yes</option><option>No</option></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Catering</label>
+                            <select name="catering" class="form-select"><option>Yes</option><option>No</option></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">DJ</label>
+                            <select name="dj" class="form-select"><option>Yes</option><option>No</option></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Additional Requirements</label>
+                            <textarea name="additional_requirements" class="form-control" rows="4"></textarea>
+                        </div>
+                        <?php if($msg != ""): ?><div class="col-12"><div class="alert alert-success rounded-4 mb-0" role="alert"><?php echo $msg; ?></div></div><?php endif; ?>
+                        <div class="col-12"><button type="submit" name="submit" class="btn btn-primary">Submit Request</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>
