@@ -1,10 +1,7 @@
 <?php session_start();
+include("../includes/access_control.php");
+require_role("admin");
 include("../includes/db.php");
-if(!isset($_SESSION['user_id']) || $_SESSION['role']!='admin')
-    {
-        header("Location:../login.php");
-        exit();
-    }
 $query=mysqli_query($conn,"SELECT * FROM events ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
@@ -49,7 +46,13 @@ $query=mysqli_query($conn,"SELECT * FROM events ORDER BY id DESC");
                                     <td><?php echo htmlspecialchars($row['venue']); ?></td>
                                     <td><?php if($row['image']!="") { ?><img src="../events/<?php echo $row['image']; ?>" width="90" class="rounded-3"> <?php } else { echo 'No image'; } ?></td>
                                     <td><?php echo $row['max_participants']; ?></td>
-                                    <td><a href="edit_event.php?id=<?php echo $row['id']; ?>" class="btn btn-outline-primary btn-sm">Edit</a> <a href="delete_event.php?id=<?php echo $row['id']; ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure want to delete this event?')">Delete</a></td>
+                                    <td class="text-nowrap">
+                                        <a href="edit_event.php?id=<?php echo (int)$row['id']; ?>" class="btn btn-outline-primary btn-sm">Edit</a>
+                                        <form method="POST" action="delete_event.php" class="d-inline">
+                                            <input type="hidden" name="id" value="<?php echo (int)$row['id']; ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this event and its registrations?')">Delete</button>
+                                        </form>
+                                    </td>
                                 </tr>
                                 <?php } ?>
                             </tbody>

@@ -6,9 +6,11 @@ include("includes/db.php");
 $query = mysqli_query($conn, "
 SELECT *
 FROM events
+WHERE event_date >= CURDATE()
 ORDER BY event_date ASC
 LIMIT 3
 ");
+$registration_count_statement = $conn->prepare("SELECT COUNT(*) AS total FROM registrations WHERE event_id = ?");
 
 /* Statistics */
 
@@ -32,6 +34,12 @@ SELECT COUNT(*) AS total
 FROM registrations
 ")
 );
+$site_content = array();
+$content_result = $conn->query("SELECT content_key, content_value FROM page_content");
+while ($content_row = $content_result->fetch_assoc()) {
+    $site_content[$content_row['content_key']] = $content_row['content_value'];
+}
+$approved_reviews = $conn->query("SELECT event_reviews.rating, event_reviews.review_text, users.name, events.event_name FROM event_reviews INNER JOIN users ON users.id = event_reviews.user_id INNER JOIN events ON events.id = event_reviews.event_id WHERE event_reviews.status = 'Published' ORDER BY event_reviews.created_at DESC LIMIT 6");
 
 ?>
 <!DOCTYPE html>
@@ -57,41 +65,13 @@ FROM registrations
 
                 <div class="col-lg-6">
 
-                    <h5 class="hero-sub">
-
-                        WELCOME TO EVENTEASE
-
-                    </h5>
-
+                    <h5 class="hero-sub"><?php echo htmlspecialchars($site_content['home_hero_eyebrow'] ?? 'WELCOME TO EVENTEASE'); ?></h5>
                     <h1 class="hero-title">
-
-                        Creating
-
-                        <span>
-
-                            Unforgettable
-
-                        </span>
-
-                        Moments
-
+                        <?php echo htmlspecialchars($site_content['home_hero_title'] ?? 'Creating'); ?>
+                        <span><?php echo htmlspecialchars($site_content['home_hero_highlight'] ?? 'Unforgettable'); ?></span>
+                        <?php echo htmlspecialchars($site_content['home_hero_suffix'] ?? 'Moments'); ?>
                     </h1>
-
-                    <p class="hero-text">
-
-                        Plan your weddings,
-                        birthdays,
-                        corporate meetings
-                        and celebrations effortlessly.
-
-                        Book decorations,
-                        photography,
-                        DJ,
-                        catering,
-                        and much more
-                        all in one place.
-
-                    </p>
+                    <p class="hero-text"><?php echo nl2br(htmlspecialchars($site_content['home_hero_description'] ?? 'Plan your weddings, birthdays, corporate meetings and celebrations effortlessly. Book decorations, photography, DJ, catering, and much more all in one place.')); ?></p>
 
                     <div class="mt-4">
 
@@ -134,24 +114,8 @@ FROM registrations
                     ABOUT US
                 </h6>
 
-                <h2 class="section-title">
-                    Making Every Celebration
-                    <span>Extraordinary</span>
-                </h2>
-
-                <p class="section-text">
-
-                    EventEase is an online Event Management &
-                    Service Booking platform designed to make
-                    planning effortless.
-
-                    From weddings and birthdays to corporate
-                    events, we connect customers with trusted
-                    services like decoration, photography,
-                    catering, DJ, and stage setup—all in one
-                    place.
-
-                </p>
+                <h2 class="section-title"><?php echo htmlspecialchars($site_content['home_about_title'] ?? 'Making Every Celebration'); ?> <span><?php echo htmlspecialchars($site_content['home_about_highlight'] ?? 'Extraordinary'); ?></span></h2>
+                <p class="section-text"><?php echo nl2br(htmlspecialchars($site_content['home_about_description'] ?? 'EventEase is an online event management and service booking platform designed to make planning effortless. From weddings and birthdays to corporate events, we connect customers with trusted services like decoration, photography, catering, DJ, and stage setup, all in one place.')); ?></p>
 
             </div>
 
@@ -537,53 +501,46 @@ events organized by EventEase.
 
 <div class="row">
 
-<?php
-
-while($row=mysqli_fetch_assoc($query))
-{
-
-$registered=mysqli_fetch_assoc(
-
-mysqli_query($conn,"
-SELECT COUNT(*) AS total
-FROM registrations
-WHERE event_id='".$row['id']."'
-")
-
-);
-
-$available=
-$row['max_participants']
--
-$registered['total'];
-
+<?php if ($query->num_rows === 0): ?>
+<div class="col-12 text-center py-4">
+    <p class="text-muted mb-3">There are no upcoming events available right now.</p>
+    <a href="events.php" class="btn btn-outline-primary">Browse Events</a>
+</div>
+<?php else: while ($row = mysqli_fetch_assoc($query)):
+$event_id = (int)$row['id'];
+$registration_count_statement->bind_param("i", $event_id);
+$registration_count_statement->execute();
+$registered = $registration_count_statement->get_result()->fetch_assoc();
+$available = max(0, (int)$row['max_participants'] - (int)$registered['total']);
 ?>
 
 <div class="col-lg-4 mb-4">
 
 <div class="event-card">
 
-<img
-src="events/<?php echo $row['image'];?>"
-class="event-img">
+<?php if ($row['image'] !== ""): ?>
+<img src="events/<?php echo rawurlencode($row['image']); ?>" class="event-img" alt="<?php echo htmlspecialchars($row['event_name']); ?>">
+<?php else: ?>
+<div class="event-placeholder"><i class="fa-solid fa-calendar-days"></i></div>
+<?php endif; ?>
 
 <div class="event-content">
 
 <span class="badge bg-warning">
 
-<?php echo $row['event_type'];?>
+<?php echo htmlspecialchars($row['event_type']); ?>
 
 </span>
 
 <h3>
 
-<?php echo $row['event_name'];?>
+<?php echo htmlspecialchars($row['event_name']); ?>
 
 </h3>
 
 <p>
 
-<?php echo substr($row['description'],0,90);?>
+<?php echo htmlspecialchars(substr($row['description'], 0, 90)); ?>
 
 ...
 
@@ -595,7 +552,7 @@ class="event-img">
 
 <i class="fas fa-calendar"></i>
 
-<?php echo $row['event_date'];?>
+<?php echo htmlspecialchars($row['event_date']); ?>
 
 </p>
 
@@ -603,7 +560,7 @@ class="event-img">
 
 <i class="fas fa-location-dot"></i>
 
-<?php echo $row['venue'];?>
+<?php echo htmlspecialchars($row['venue']); ?>
 
 </p>
 
@@ -613,54 +570,19 @@ class="event-img">
 
 Seats Left:
 
-<?php echo $available;?>
+<?php echo $available; ?>
 
 </p>
 
 </div>
 
-<a
-
-<?php
-
-if(isset($_SESSION['user_id']))
-{
-
-?>
-
-<a
-href="register_event.php?id=<?php echo $row['id'];?>"
-class="btn btn-warning w-100">
-
-Register Now
-
-</a>
-
-<?php
-
-}
-
-else
-
-{
-
-?>
-
-<a
-href="login.php"
-class="btn btn-primary w-100">
-
-Login to Register
-
-</a>
-
-<?php
-
-}
-
-?>
-
-</a>
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'user'): ?>
+<a href="register_event.php?id=<?php echo $event_id; ?>" class="btn btn-warning w-100">Register Now</a>
+<?php elseif (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+<a href="admin/dashboard.php" class="btn btn-outline-primary w-100">Admin Dashboard</a>
+<?php else: ?>
+<a href="login.php" class="btn btn-primary w-100">Login to Register</a>
+<?php endif; ?>
 
 </div>
 
@@ -668,11 +590,7 @@ Login to Register
 
 </div>
 
-<?php
-
-}
-
-?>
+<?php endwhile; endif; ?>
 
 </div>
 
@@ -713,7 +631,7 @@ and unforgettable celebrations.
 
 <div class="row g-4">
 
-<div class="col-lg-3 col-md-6">
+<div class="col-lg-4 col-md-6">
 
 <div class="gallery-card">
 
@@ -729,7 +647,7 @@ and unforgettable celebrations.
 
 </div>
 
-<div class="col-lg-3 col-md-6">
+<div class="col-lg-4 col-md-6">
 
 <div class="gallery-card">
 
@@ -745,91 +663,11 @@ and unforgettable celebrations.
 
 </div>
 
-<div class="col-lg-3 col-md-6">
+<div class="col-lg-4 col-md-6">
 
 <div class="gallery-card">
 
 <img src="events/g3.jpg">
-
-<div class="overlay">
-
-<i class="fas fa-search-plus"></i>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-3 col-md-6">
-
-<div class="gallery-card">
-
-<img src="images/gallery/gallery4.jpg">
-
-<div class="overlay">
-
-<i class="fas fa-search-plus"></i>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-3 col-md-6">
-
-<div class="gallery-card">
-
-<img src="images/gallery/gallery5.jpg">
-
-<div class="overlay">
-
-<i class="fas fa-search-plus"></i>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-3 col-md-6">
-
-<div class="gallery-card">
-
-<img src="images/gallery/gallery6.jpg">
-
-<div class="overlay">
-
-<i class="fas fa-search-plus"></i>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-3 col-md-6">
-
-<div class="gallery-card">
-
-<img src="images/gallery/gallery7.jpg">
-
-<div class="overlay">
-
-<i class="fas fa-search-plus"></i>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-3 col-md-6">
-
-<div class="gallery-card">
-
-<img src="images/gallery/gallery8.jpg">
 
 <div class="overlay">
 
@@ -849,170 +687,31 @@ and unforgettable celebrations.
 <!--================ TESTIMONIALS =================-->
 
 <section class="testimonial-section py-5">
-
 <div class="container">
-
-<div class="text-center mb-5">
-
-<h6 class="section-subtitle">
-TESTIMONIALS
-</h6>
-
-<h2 class="section-title">
-
-What Our
-
-<span>Clients Say</span>
-
-</h2>
-
-<p class="section-text">
-
-Hear from customers who trusted
-EventEase to make their celebrations
-memorable.
-
-</p>
-
+    <div class="text-center mb-5">
+        <h6 class="section-subtitle">EVENT REVIEWS</h6>
+        <h2 class="section-title">What Our <span>Attendees Say</span></h2>
+        <p class="section-text">Reviews are published after admin approval.</p>
+    </div>
+    <?php if ($approved_reviews->num_rows === 0): ?>
+        <p class="text-center text-muted mb-0">There are no published event reviews yet.</p>
+    <?php else: ?>
+        <div class="row g-4">
+            <?php while ($review = $approved_reviews->fetch_assoc()): ?>
+                <?php $rating = max(1, min(5, (int)$review['rating'])); $initial = strtoupper(substr(trim($review['name']), 0, 1)); ?>
+                <div class="col-lg-4 col-md-6">
+                    <article class="testimonial-card h-100">
+                        <div class="client-avatar" aria-hidden="true"><?php echo htmlspecialchars($initial); ?></div>
+                        <h3 class="h5 fw-bold"><?php echo htmlspecialchars($review['name']); ?></h3>
+                        <p class="client-role mb-2">Attendee · <?php echo htmlspecialchars($review['event_name']); ?></p>
+                        <div class="stars" aria-label="<?php echo $rating; ?> out of 5 stars"><?php echo str_repeat('★', $rating); ?><span class="text-muted"><?php echo str_repeat('☆', 5 - $rating); ?></span></div>
+                        <p class="mb-0"><?php echo nl2br(htmlspecialchars($review['review_text'])); ?></p>
+                    </article>
+                </div>
+            <?php endwhile; ?>
+        </div>
+    <?php endif; ?>
 </div>
-
-<div id="testimonialCarousel"
-class="carousel slide"
-data-bs-ride="carousel">
-
-<div class="carousel-inner">
-
-<!-- Testimonial 1 -->
-
-<div class="carousel-item active">
-
-<div class="testimonial-card">
-
-<img src="images/client1.jpg"
-class="client-img">
-
-<h4>Priya Sharma</h4>
-
-<p class="client-role">
-
-Wedding Client
-
-</p>
-
-<div class="stars">
-
-★★★★★
-
-</div>
-
-<p>
-
-"The decoration and photography
-were outstanding.
-Everything was perfectly organized."
-
-</p>
-
-</div>
-
-</div>
-
-<!-- Testimonial 2 -->
-
-<div class="carousel-item">
-
-<div class="testimonial-card">
-
-<img src="images/client2.jpg"
-class="client-img">
-
-<h4>Rahul Kumar</h4>
-
-<p class="client-role">
-
-Corporate Event
-
-</p>
-
-<div class="stars">
-
-★★★★★
-
-</div>
-
-<p>
-
-"Our annual meeting was managed
-professionally from start to finish.
-Highly recommended."
-
-</p>
-
-</div>
-
-</div>
-
-<!-- Testimonial 3 -->
-
-<div class="carousel-item">
-
-<div class="testimonial-card">
-
-<img src="images/client3.jpg"
-class="client-img">
-
-<h4>Ananya</h4>
-
-<p class="client-role">
-
-Birthday Celebration
-
-</p>
-
-<div class="stars">
-
-★★★★★
-
-</div>
-
-<p>
-
-"The booking process was simple,
-and the decorations exceeded
-our expectations."
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-<button
-class="carousel-control-prev"
-type="button"
-data-bs-target="#testimonialCarousel"
-data-bs-slide="prev">
-
-<span class="carousel-control-prev-icon"></span>
-
-</button>
-
-<button
-class="carousel-control-next"
-type="button"
-data-bs-target="#testimonialCarousel"
-data-bs-slide="next">
-
-<span class="carousel-control-next-icon"></span>
-
-</button>
-
-</div>
-
-</div>
-
 </section>
 <!--================ CONTACT =================-->
 

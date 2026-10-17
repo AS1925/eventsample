@@ -1,46 +1,52 @@
 <?php 
 session_start();
+include('../includes/access_control.php');
+require_role('admin');
 include('../includes/db.php');
-if(!isset($_SESSION['user_id'])||$_SESSION['role']!='admin')
-    {
-        header("Location:../login.php");
-        exit();
-    }
 $msg="";
-if(isset($_POST['save']))
-    {
-        $event_name=$_POST['event_name'];
-        $event_type=$_POST['event_type'];
-        $event_date=$_POST['event_date'];
-        $event_time=$_POST['event_time'];
-        $venue=$_POST['venue'];
-        $description=$_POST['description'];
-        $max_participants=$_POST['max_participants'];
-        $image=$_FILES['image']['name'];
-        $tmp=$_FILES['image']['tmp_name'];
-        $extension=strtolower(pathinfo($image,PATHINFO_EXTENSION));
-        $allowed=array("jpg","jpeg","png","webp");
-        $check=mysqli_query($conn,"SELECT * FROM events WHERE event_name='$event_name' AND event_date='$event_date'");
-        if(mysqli_num_rows($check)>0)
-            {
-                $msg="Event already Exists.";
+if (isset($_POST['save'])) {
+    $event_name = trim($_POST['event_name']);
+    $event_type = trim($_POST['event_type']);
+    $event_date = $_POST['event_date'];
+    $event_time = $_POST['event_time'];
+    $venue = trim($_POST['venue']);
+    $description = trim($_POST['description']);
+    $max_participants = (int)$_POST['max_participants'];
+    $upload = $_FILES['image'];
+
+    if ($max_participants < 1) {
+        $msg = "Maximum participants must be at least 1.";
+    } elseif ($upload['error'] !== UPLOAD_ERR_OK) {
+        $msg = "Choose an event image to upload.";
+    } else {
+        $extension = strtolower(pathinfo($upload['name'], PATHINFO_EXTENSION));
+        $allowed_extensions = array("jpg", "jpeg", "png", "webp");
+        if (!in_array($extension, $allowed_extensions, true)) {
+            $msg = "Only JPG, JPEG, PNG and WEBP images are allowed.";
+        } else {
+            $check = $conn->prepare("SELECT id FROM events WHERE event_name = ? AND event_date = ? LIMIT 1");
+            $check->bind_param("ss", $event_name, $event_date);
+            $check->execute();
+            if ($check->get_result()->num_rows > 0) {
+                $msg = "Event already exists.";
+            } else {
+                $image = bin2hex(random_bytes(8)) . "." . $extension;
+                if (!move_uploaded_file($upload['tmp_name'], "../events/" . $image)) {
+                    $msg = "The image could not be uploaded. Please try again.";
+                } else {
+                    $insert = $conn->prepare("INSERT INTO events (event_name, event_type, event_date, event_time, venue, description, max_participants, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $insert->bind_param("ssssssis", $event_name, $event_type, $event_date, $event_time, $venue, $description, $max_participants, $image);
+                    if ($insert->execute()) {
+                        $msg = "Event added Successfully";
+                    } else {
+                        unlink("../events/" . $image);
+                        $msg = "Failed to Add Event";
+                    }
+                }
             }
-        else if(!in_array($extension,$allowed))
-            {
-                $msg="Only JPG, JPEG, PNG and WEBP images are allowed.";
-            }  
-            else {
-        move_uploaded_file($tmp,"../events/".$image);
-        $query="INSERT INTO events(event_name,event_type,event_date,event_time,venue,description,max_participants,image) VALUES ('$event_name','$event_type','$event_date','$event_time','$venue','$description','$max_participants','$image')";
-        if(mysqli_query($conn,$query))
-            {
-                $msg="Event added Successfully";
-            }
-        else{
-            $msg="Failed to Add Event";
         }
-            }
     }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

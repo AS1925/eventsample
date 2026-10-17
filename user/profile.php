@@ -1,58 +1,46 @@
 <?php
 session_start();
+include("../includes/access_control.php");
+require_role("user");
 include("../includes/db.php");
 
-if(!isset($_SESSION['user_id']))
-{
-    header("Location: ../login.php");
-    exit();
-}
-
-$user_id = $_SESSION['user_id'];
-
-$result = mysqli_query($conn,"
-SELECT *
-FROM users
-WHERE id='$user_id'
-");
-
-$user = mysqli_fetch_assoc($result);
+$user_id = (int)$_SESSION['user_id'];
+$statement = $conn->prepare("SELECT id, name, email, phone FROM users WHERE id = ?");
+$statement->bind_param("i", $user_id);
+$statement->execute();
+$user = $statement->get_result()->fetch_assoc();
 
 $msg = "";
 
 if(isset($_POST['update']))
 {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $phone = $_POST['phone'];
-    $check=mysqli_query($conn," SELECT * FROM users WHERE email='$email' AND id!='$user_id'");
-    if(mysqli_num_rows($check)>0)
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $phone = trim($_POST['phone']);
+    $check = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
+    $check->bind_param("si", $email, $user_id);
+    $check->execute();
+    if($check->get_result()->num_rows > 0)
         {
             $msg="Email Already Exists";
         }
     else{
-    $update = mysqli_query($conn,"
-    UPDATE users
-    SET
-    name='$name',
-    email='$email',
-    phone='$phone'
-    WHERE id='$user_id'
-    ");
+    $update = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?");
+    $update->bind_param("sssi", $name, $email, $phone, $user_id);
 
-    if($update)
+    if($update->execute())
     {
         $_SESSION['user_name'] = $name;
 
         $msg = "Profile Updated Successfully";
 
-        $result = mysqli_query($conn,"
-        SELECT *
-        FROM users
-        WHERE id='$user_id'
-        ");
-
-        $user = mysqli_fetch_assoc($result);
+        $statement = $conn->prepare("SELECT id, name, email, phone FROM users WHERE id = ?");
+        $statement->bind_param("i", $user_id);
+        $statement->execute();
+        $user = $statement->get_result()->fetch_assoc();
+    }
+    else {
+        $msg = "Profile could not be updated. Please try again.";
     }
     }
 }
@@ -98,7 +86,7 @@ if(isset($_POST['update']))
                             <label class="form-label">Phone</label>
                             <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
                         </div>
-                        <?php if($msg != ""): ?><div class="col-12"><div class="alert alert-success rounded-4 mb-0" role="alert"><?php echo $msg; ?></div></div><?php endif; ?>
+                        <?php if($msg != ""): ?><div class="col-12"><div class="alert <?php echo strpos($msg, 'Successfully') !== false ? 'alert-success' : 'alert-danger'; ?> rounded-4 mb-0" role="alert"><?php echo htmlspecialchars($msg); ?></div></div><?php endif; ?>
                         <div class="col-12"><button type="submit" name="update" class="btn btn-primary">Update Profile</button></div>
                     </form>
                 </div>

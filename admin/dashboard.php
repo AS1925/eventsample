@@ -1,15 +1,8 @@
 <?php 
 session_start();
+include('../includes/access_control.php');
+require_role('admin');
 include('../includes/db.php');
-if(!isset($_SESSION['user_id']))
-    {
-        header("Location:../login.php");
-        exit();
-    }
-if($_SESSION['role']!='admin')
-    {
-        die("Access Denied");
-    }
 $total_users = mysqli_fetch_assoc(
     mysqli_query($conn,"SELECT COUNT(*) AS total FROM users"));
 
@@ -23,6 +16,12 @@ $total_registrations = mysqli_fetch_assoc(
 
 $total_requests = mysqli_fetch_assoc(
     mysqli_query($conn,"SELECT COUNT(*) AS total FROM service_requests")
+);
+$total_enquiries = mysqli_fetch_assoc(
+    mysqli_query($conn,"SELECT COUNT(*) AS total FROM contact_messages")
+);
+$pending_reviews = mysqli_fetch_assoc(
+    mysqli_query($conn,"SELECT COUNT(*) AS total FROM event_reviews WHERE status = 'Pending'")
 );
 $recent_registrations = mysqli_query($conn, "SELECT registrations.id, users.name, events.event_name, registrations.status FROM registrations INNER JOIN users ON registrations.user_id=users.id INNER JOIN events ON registrations.event_id=events.id ORDER BY registrations.id DESC LIMIT 5");
 ?>
@@ -56,10 +55,12 @@ $recent_registrations = mysqli_query($conn, "SELECT registrations.id, users.name
                         </div>
                     </div>
                     <div class="row g-4 mb-4">
-                        <div class="col-md-6 col-xl-3"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-users"></i></div><h6 class="text-muted">Total Users</h6><h3 class="fw-bold mb-0"><?php echo $total_users['total']; ?></h3></div></div>
-                        <div class="col-md-6 col-xl-3"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-calendar-days"></i></div><h6 class="text-muted">Total Events</h6><h3 class="fw-bold mb-0"><?php echo $total_events['total']; ?></h3></div></div>
-                        <div class="col-md-6 col-xl-3"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-ticket-alt"></i></div><h6 class="text-muted">Registrations</h6><h3 class="fw-bold mb-0"><?php echo $total_registrations['total']; ?></h3></div></div>
-                        <div class="col-md-6 col-xl-3"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-handshake"></i></div><h6 class="text-muted">Service Requests</h6><h3 class="fw-bold mb-0"><?php echo $total_requests['total']; ?></h3></div></div>
+                        <div class="col-md-6 col-xl-4"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-users"></i></div><h6 class="text-muted">Total Users</h6><h3 class="fw-bold mb-0"><?php echo $total_users['total']; ?></h3></div></div>
+                        <div class="col-md-6 col-xl-4"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-calendar-days"></i></div><h6 class="text-muted">Total Events</h6><h3 class="fw-bold mb-0"><?php echo $total_events['total']; ?></h3></div></div>
+                        <div class="col-md-6 col-xl-4"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-ticket-alt"></i></div><h6 class="text-muted">Registrations</h6><h3 class="fw-bold mb-0"><?php echo $total_registrations['total']; ?></h3></div></div>
+                        <div class="col-md-6 col-xl-4"><div class="card stat-card h-100"><div class="icon-badge"><i class="fa-solid fa-handshake"></i></div><h6 class="text-muted">Service Requests</h6><h3 class="fw-bold mb-0"><?php echo $total_requests['total']; ?></h3></div></div>
+                        <div class="col-md-6 col-xl-4"><a href="enquiries.php" class="card stat-card h-100 text-decoration-none"><div class="icon-badge"><i class="fa-solid fa-inbox"></i></div><h6 class="text-muted">Contact Enquiries</h6><h3 class="fw-bold mb-0"><?php echo $total_enquiries['total']; ?></h3></a></div>
+                        <div class="col-md-6 col-xl-4"><a href="manage_reviews.php" class="card stat-card h-100 text-decoration-none"><div class="icon-badge"><i class="fa-solid fa-star"></i></div><h6 class="text-muted">Pending Reviews</h6><h3 class="fw-bold mb-0"><?php echo $pending_reviews['total']; ?></h3></a></div>
                     </div>
                     <div class="card border-0 shadow-sm rounded-4 p-4">
                         <h5 class="fw-bold mb-3">Recent Registrations</h5>

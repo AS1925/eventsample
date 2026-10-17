@@ -1,12 +1,13 @@
 <?php session_start();
-if(!isset($_SESSION['user_id']))
-    {
-        header("Location:../login.php");
-        exit();
-    }
+include("../includes/access_control.php");
+require_role("user");
 include('../includes/db.php');
 $stats = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) AS total FROM registrations WHERE user_id='".$_SESSION['user_id']."'"));
-$upcoming = mysqli_query($conn, "SELECT * FROM registrations INNER JOIN events ON registrations.event_id=events.id WHERE registrations.user_id='".$_SESSION['user_id']."' ORDER BY events.event_date ASC LIMIT 1");
+$user_id = (int)$_SESSION['user_id'];
+$upcoming_statement = $conn->prepare("SELECT events.* FROM registrations INNER JOIN events ON registrations.event_id = events.id WHERE registrations.user_id = ? AND events.event_date >= CURDATE() ORDER BY events.event_date ASC LIMIT 1");
+$upcoming_statement->bind_param("i", $user_id);
+$upcoming_statement->execute();
+$upcoming = $upcoming_statement->get_result();
 $upcoming_event = mysqli_fetch_assoc($upcoming);
 ?>
 <!DOCTYPE html>

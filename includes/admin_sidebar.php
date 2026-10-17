@@ -12,7 +12,10 @@ $active_page = basename($_SERVER['PHP_SELF']);
         <a href="view_events.php" class="list-group-item list-group-item-action <?php echo $active_page === 'view_events.php' ? 'active' : ''; ?>">Manage Events</a>
         <a href="view_registrations.php" class="list-group-item list-group-item-action <?php echo $active_page === 'view_registrations.php' ? 'active' : ''; ?>">Registrations</a>
         <a href="view_service_requests.php" class="list-group-item list-group-item-action <?php echo $active_page === 'view_service_requests.php' ? 'active' : ''; ?>">Service Requests</a>
+        <a href="enquiries.php" class="list-group-item list-group-item-action <?php echo $active_page === 'enquiries.php' ? 'active' : ''; ?>">Contact Enquiries</a>
+        <a href="manage_reviews.php" class="list-group-item list-group-item-action <?php echo $active_page === 'manage_reviews.php' ? 'active' : ''; ?>">Event Reviews</a>
         <a href="reports.php" class="list-group-item list-group-item-action <?php echo $active_page === 'reports.php' ? 'active' : ''; ?>">Reports</a>
+        <a href="manage_content.php" class="list-group-item list-group-item-action <?php echo $active_page === 'manage_content.php' ? 'active' : ''; ?>">Edit Public Content</a>
         <a href="../logout.php" class="list-group-item list-group-item-action text-danger" onclick="return confirm('Are you sure you want to logout?')">Logout</a>
     </div>
 </div>

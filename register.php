@@ -2,19 +2,22 @@
 $message="";
 if(isset($_POST['register']))
     {
-        $name=$_POST['name'];
-        $email=$_POST['email'];
-        $phone=$_POST['phone'];
+        $name=trim($_POST['name']);
+        $email=trim($_POST['email']);
+        $phone=trim($_POST['phone']);
         $password=$_POST['password'];
         $hashed_password=password_hash($password,PASSWORD_DEFAULT);
-        $check=mysqli_query($conn, "SELECT * FROM users WHERE email='$email'");
-        if(mysqli_num_rows($check)>0)
+        $check=$conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $check->bind_param("s", $email);
+        $check->execute();
+        if($check->get_result()->num_rows>0)
             {
                 $message="Email already registered";
             }
         else{
-            $query="INSERT INTO users(name,email,phone,password) VALUES('$name','$email','$phone','$hashed_password')";
-            if(mysqli_query($conn,$query))
+            $query=$conn->prepare("INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, 'user')");
+            $query->bind_param("ssss", $name, $email, $phone, $hashed_password);
+            if($query->execute())
                 {
                     $message="Registration Successful!";
                 }
@@ -37,7 +40,6 @@ if(isset($_POST['register']))
     </head>
     <body class="auth-page">
         <?php include 'includes/navbar.php'; ?>
-        <div class="auth-page">
             <div class="container py-5">
                 <div class="row auth-card shadow-lg overflow-hidden">
                     <div class="col-lg-6 p-4 p-lg-5 bg-white">
@@ -78,7 +80,7 @@ if(isset($_POST['register']))
                             </div>
                         </div>
                         <?php if($message != ""): ?>
-                            <div class="alert <?php echo strpos($message,'Successful') !== false ? 'alert-success' : 'alert-danger'; ?> rounded-4 mt-3" role="alert"><?php echo $message; ?></div>
+                            <div class="alert <?php echo strpos($message,'Successful') !== false ? 'alert-success' : 'alert-danger'; ?> rounded-4 mt-3" role="alert"><?php echo htmlspecialchars($message); ?></div>
                         <?php endif; ?>
                         <button type="submit" name="register" class="btn btn-primary w-100 mt-3">Create Account</button>
                     </form>
@@ -94,7 +96,6 @@ if(isset($_POST['register']))
                     </div>
                 </div>
             </div>
-        </div>
         <?php include 'includes/footer.php'; ?>
     </body>
 </html>

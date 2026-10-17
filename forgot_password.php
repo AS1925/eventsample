@@ -6,8 +6,8 @@ $msg="";
 
 if(isset($_POST['reset']))
 {
-    $email=$_POST['email'];
-    $phone=$_POST['phone'];
+    $email=trim($_POST['email']);
+    $phone=trim($_POST['phone']);
 
     $password=$_POST['password'];
     $confirm_password=$_POST['confirm_password'];
@@ -18,28 +18,21 @@ if(isset($_POST['reset']))
     }
     else
     {
-        $check=mysqli_query($conn,"
-        SELECT *
-        FROM users
-        WHERE email='$email'
-        AND phone='$phone'
-        ");
+        $check=$conn->prepare("SELECT id FROM users WHERE email = ? AND phone = ? LIMIT 1");
+        $check->bind_param("ss", $email, $phone);
+        $check->execute();
+        $user=$check->get_result()->fetch_assoc();
 
-        if(mysqli_num_rows($check)>0)
+        if($user)
         {
             $hashed_password=password_hash(
                 $password,
                 PASSWORD_DEFAULT
             );
 
-            mysqli_query($conn,"
-            UPDATE users
-            SET password='$hashed_password'
-            WHERE email='$email'
-            AND phone='$phone'
-            ");
-
-            $msg="Password Updated Successfully";
+            $update=$conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $update->bind_param("si", $hashed_password, $user['id']);
+            $msg=$update->execute() ? "Password Updated Successfully" : "Password could not be updated. Please try again.";
         }
         else
         {
@@ -102,7 +95,7 @@ if(isset($_POST['reset']))
                             </div>
                         </div>
                         <?php if($msg != ""): ?>
-                            <div class="alert <?php echo strpos($msg,'Successfully') !== false ? 'alert-success' : 'alert-danger'; ?> rounded-4" role="alert"><?php echo $msg; ?></div>
+                            <div class="alert <?php echo strpos($msg,'Successfully') !== false ? 'alert-success' : 'alert-danger'; ?> rounded-4" role="alert"><?php echo htmlspecialchars($msg); ?></div>
                         <?php endif; ?>
                         <button type="submit" name="reset" class="btn btn-primary w-100 py-2">Reset Password</button>
                     </form>

@@ -1,11 +1,18 @@
 <?php
 
 session_start();
+include("../includes/access_control.php");
+require_role("admin");
 include("../includes/db.php");
 
-if(!isset($_SESSION['user_id']) || $_SESSION['role']!="admin")
-{
-    header("Location: ../login.php");
+$registration_statuses = array("Registered", "Attended", "No-show", "Cancelled");
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registration_id'], $_POST['status']) && is_string($_POST['registration_id']) && ctype_digit($_POST['registration_id']) && in_array($_POST['status'], $registration_statuses, true)) {
+    $registration_id = (int)$_POST['registration_id'];
+    $status = $_POST['status'];
+    $update = $conn->prepare("UPDATE registrations SET status = ? WHERE id = ?");
+    $update->bind_param("si", $status, $registration_id);
+    $update->execute();
+    header("Location: view_registrations.php?updated=1");
     exit();
 }
 
@@ -51,9 +58,10 @@ ORDER BY registrations.id DESC
             <div class="col-lg-9">
                 <div class="card border-0 shadow-sm rounded-4 p-4">
                     <h3 class="fw-bold mb-3">Event Registrations</h3>
+                    <?php if (isset($_GET['updated'])): ?><div class="alert alert-success" role="status">Attendance status updated.</div><?php endif; ?>
                     <div class="table-responsive">
                         <table class="table align-middle modern-table">
-                            <thead><tr><th>S.No</th><th>User Name</th><th>Email</th><th>Event</th><th>Date</th><th>Status</th></tr></thead>
+                            <thead><tr><th>S.No</th><th>User Name</th><th>Email</th><th>Event</th><th>Date</th><th>Attendance</th><th>Update</th></tr></thead>
                             <tbody>
                                 <?php $count=1; while($row=mysqli_fetch_assoc($query)){ ?>
                                 <tr>
@@ -63,6 +71,16 @@ ORDER BY registrations.id DESC
                                     <td><?php echo htmlspecialchars($row['event_name']); ?></td>
                                     <td><?php echo htmlspecialchars($row['event_date']); ?></td>
                                     <td><span class="badge bg-soft-primary text-primary"><?php echo htmlspecialchars($row['status']); ?></span></td>
+                                    <td>
+                                        <form method="POST" class="d-flex gap-2 align-items-center">
+                                            <input type="hidden" name="registration_id" value="<?php echo (int)$row['id']; ?>">
+                                            <label class="visually-hidden" for="registration-status-<?php echo (int)$row['id']; ?>">Attendance status</label>
+                                            <select id="registration-status-<?php echo (int)$row['id']; ?>" name="status" class="form-select form-select-sm">
+                                                <?php foreach ($registration_statuses as $status): ?><option value="<?php echo htmlspecialchars($status); ?>" <?php echo $row['status'] === $status ? 'selected' : ''; ?>><?php echo htmlspecialchars($status); ?></option><?php endforeach; ?>
+                                            </select>
+                                            <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                                        </form>
+                                    </td>
                                 </tr>
                                 <?php } ?>
                             </tbody>

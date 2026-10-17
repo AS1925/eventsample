@@ -3,11 +3,13 @@ include("includes/db.php");
 $message="";
 if(isset($_POST['login']))
     {
-        $email=$_POST['email'];
+        $email=trim($_POST['email']);
         $password=$_POST['password'];
-        $query=mysqli_query($conn,"SELECT * FROM users WHERE email='$email'");
-        if(mysqli_num_rows($query)>0){
-            $user=mysqli_fetch_assoc($query);
+        $query=$conn->prepare("SELECT id, name, role, password FROM users WHERE email = ? LIMIT 1");
+        $query->bind_param("s", $email);
+        $query->execute();
+        $user=$query->get_result()->fetch_assoc();
+        if($user){
             if(password_verify($password,$user['password']))
                 {
                     $_SESSION['user_id']=$user['id'];
@@ -78,15 +80,11 @@ if(isset($_POST['login']))
                                 <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i class="fa-solid fa-eye"></i></button>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="rememberMe">
-                                <label class="form-check-label" for="rememberMe">Remember me</label>
-                            </div>
+                        <div class="d-flex justify-content-end align-items-center mb-4">
                             <a href="forgot_password.php" class="text-decoration-none">Forgot password?</a>
                         </div>
                         <?php if($message != ""): ?>
-                            <div class="alert alert-danger rounded-4" role="alert"><?php echo $message; ?></div>
+                            <div class="alert alert-danger rounded-4" role="alert"><?php echo htmlspecialchars($message); ?></div>
                         <?php endif; ?>
                         <button type="submit" name="login" class="btn btn-primary w-100 py-2">Login</button>
                     </form>

@@ -1,24 +1,20 @@
 <?php
 
 session_start();
+include("../includes/access_control.php");
+require_role("user");
 include("../includes/db.php");
-
-if(!isset($_SESSION['user_id']))
-{
-    header("Location: ../login.php");
-    exit();
-}
 
 $msg="";
 
 if(isset($_POST['submit']))
 {
-    $user_id=$_SESSION['user_id'];
+    $user_id=(int)$_SESSION['user_id'];
 
     $event_type=$_POST['event_type'];
     $event_date=$_POST['event_date'];
     $venue=$_POST['venue'];
-    $guests=$_POST['guests'];
+    $guests=(int)$_POST['guests'];
 
     $decoration=$_POST['decoration'];
     $photography=$_POST['photography'];
@@ -27,38 +23,16 @@ if(isset($_POST['submit']))
 
     $additional_requirements=$_POST['additional_requirements'];
 
-    $query=mysqli_query($conn,"
-    INSERT INTO service_requests
-    (
-    user_id,
-    event_type,
-    event_date,
-    venue,
-    guests,
-    decoration,
-    photography,
-    catering,
-    dj,
-    additional_requirements
-    )
-    VALUES
-    (
-    '$user_id',
-    '$event_type',
-    '$event_date',
-    '$venue',
-    '$guests',
-    '$decoration',
-    '$photography',
-    '$catering',
-    '$dj',
-    '$additional_requirements'
-    )
-    ");
+    $statement=$conn->prepare("INSERT INTO service_requests (user_id, event_type, event_date, venue, guests, decoration, photography, catering, dj, additional_requirements) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $statement->bind_param("isssisssss", $user_id, $event_type, $event_date, $venue, $guests, $decoration, $photography, $catering, $dj, $additional_requirements);
 
-    if($query)
+    if($statement->execute())
     {
         $msg="Service Request Submitted Successfully";
+    }
+    else
+    {
+        $msg="Service request could not be submitted. Please try again.";
     }
 }
 ?>
@@ -99,7 +73,7 @@ if(isset($_POST['submit']))
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Event Date</label>
-                            <input type="date" name="event_date" class="form-control" required>
+                            <input type="date" name="event_date" min="<?php echo date('Y-m-d'); ?>" class="form-control" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Venue</label>
@@ -129,7 +103,7 @@ if(isset($_POST['submit']))
                             <label class="form-label">Additional Requirements</label>
                             <textarea name="additional_requirements" class="form-control" rows="4"></textarea>
                         </div>
-                        <?php if($msg != ""): ?><div class="col-12"><div class="alert alert-success rounded-4 mb-0" role="alert"><?php echo $msg; ?></div></div><?php endif; ?>
+                        <?php if($msg != ""): ?><div class="col-12"><div class="alert <?php echo strpos($msg, 'Successfully') !== false ? 'alert-success' : 'alert-danger'; ?> rounded-4 mb-0" role="alert"><?php echo htmlspecialchars($msg); ?></div></div><?php endif; ?>
                         <div class="col-12"><button type="submit" name="submit" class="btn btn-primary">Submit Request</button></div>
                     </form>
                 </div>

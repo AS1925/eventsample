@@ -1,65 +1,68 @@
 <?php
-
 session_start();
+include("../includes/access_control.php");
+require_role("admin");
 include("../includes/db.php");
 
-$id=$_GET['id'];
-
-if(isset($_POST['update']))
-{
-    $status=$_POST['status'];
-
-    mysqli_query($conn,"
-    UPDATE service_requests
-    SET status='$status'
-    WHERE id='$id'
-    ");
-
-    header("Location:view_service_requests.php");
+if (!isset($_GET['id']) || !ctype_digit($_GET['id'])) {
+    header("Location: view_service_requests.php");
     exit();
 }
 
-$result=mysqli_query($conn,"
-SELECT * FROM service_requests
-WHERE id='$id'
-");
+$id = (int)$_GET['id'];
+$statuses = array("Pending", "Approved", "Completed", "Rejected");
+if (isset($_POST['update']) && isset($_POST['status']) && in_array($_POST['status'], $statuses, true)) {
+    $status = $_POST['status'];
+    $update = $conn->prepare("UPDATE service_requests SET status = ? WHERE id = ?");
+    $update->bind_param("si", $status, $id);
+    if ($update->execute()) {
+        header("Location: view_service_requests.php");
+        exit();
+    }
+}
 
-$row=mysqli_fetch_assoc($result);
-
+$statement = $conn->prepare("SELECT id, status FROM service_requests WHERE id = ?");
+$statement->bind_param("i", $id);
+$statement->execute();
+$row = $statement->get_result()->fetch_assoc();
+if (!$row) {
+    header("Location: view_service_requests.php");
+    exit();
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Request Status</title>
+    <title>Update Request Status - EventEase</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="icon" href="../events/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 <body>
     <?php include '../includes/navbar.php'; ?>
     <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-lg rounded-4 p-4 p-lg-5">
-                    <div class="text-center mb-4">
-                        <h3 class="fw-bold mb-2">Update Request Status</h3>
-                        <p class="text-muted mb-0">Change the status for this service request.</p>
-                    </div>
+        <div class="row g-4">
+            <div class="col-lg-3">
+                <?php include '../includes/admin_sidebar.php'; ?>
+            </div>
+            <div class="col-lg-9">
+                <div class="card border-0 shadow-sm rounded-4 p-4 p-lg-5">
+                    <h1 class="h3 fw-bold mb-2">Update Request Status</h1>
+                    <p class="text-muted mb-4">Change the status for this service request.</p>
                     <form method="POST">
                         <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="Pending" <?php if($row['status']=="Pending") echo "selected"; ?>>Pending</option>
-                                <option value="Approved" <?php if($row['status']=="Approved") echo "selected"; ?>>Approved</option>
-                                <option value="Completed" <?php if($row['status']=="Completed") echo "selected"; ?>>Completed</option>
-                                <option value="Rejected" <?php if($row['status']=="Rejected") echo "selected"; ?>>Rejected</option>
+                            <label class="form-label" for="status">Status</label>
+                            <select id="status" name="status" class="form-select" required>
+                                <?php foreach ($statuses as $status): ?>
+                                    <option value="<?php echo htmlspecialchars($status); ?>" <?php echo $row['status'] === $status ? 'selected' : ''; ?>><?php echo htmlspecialchars($status); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
-                        <button type="submit" name="update" class="btn btn-primary">Update Status</button>
+                        <button type="submit" name="update" class="btn btn-primary">Save Status</button>
+                        <a href="view_service_requests.php" class="btn btn-outline-secondary">Cancel</a>
                     </form>
                 </div>
             </div>

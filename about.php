@@ -1,4 +1,12 @@
-<?php session_start(); ?>
+<?php
+session_start();
+include("includes/db.php");
+$about_content = array();
+$about_result = $conn->query("SELECT content_key, content_value FROM page_content WHERE content_key IN ('about_title', 'about_description')");
+while ($about_row = $about_result->fetch_assoc()) {
+    $about_content[$about_row['content_key']] = $about_row['content_value'];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,8 +25,8 @@
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
                     <div class="brand-pill mb-3"><i class="fa-solid fa-sparkles"></i> Why EventEase</div>
-                    <h1 class="page-title mb-3">Crafting polished experiences for every celebration.</h1>
-                    <p class="page-subtitle">EventEase combines event discovery, registration, and service requests into one elegant platform designed for modern planners and guests.</p>
+                    <h1 class="page-title mb-3"><?php echo htmlspecialchars($about_content['about_title'] ?? 'Crafting polished experiences for every celebration.'); ?></h1>
+                    <p class="page-subtitle"><?php echo nl2br(htmlspecialchars($about_content['about_description'] ?? 'EventEase combines event discovery, registration, and service requests into one elegant platform designed for modern planners and guests.')); ?></p>
                     <div class="d-flex flex-wrap gap-3">
                         <a href="events.php" class="btn btn-primary">Explore Events</a>
                         <a href="contact.php" class="btn btn-outline-primary">Contact Us</a>
